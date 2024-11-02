@@ -1,0 +1,234 @@
+# Bank-Management-System
+/*          Bank Management System     
+ 
+                 Major Project
+                 
+Made  By - Tushar Sharma */
+
+
+#include <stdio.h>
+
+//Forming a structure for making accounts
+struct Bank {
+    char name[100];
+    int accno;
+    float savings;
+};
+
+//Function for creating an account
+void create() {
+    
+    //Assigning a structure to each account
+    struct Bank Acc;
+    
+    FILE*ptr = fopen("AccountDetails.dat", "ab"); 
+    //'ab' mode helps us to create a file if it don't exist and also help us to write from the end of the file.
+    
+    //Taking basic details for making your account
+    printf("Enter your name: ");
+    scanf("%s", Acc.name);
+    printf("Enter account no: ");
+    scanf("%d", &Acc.accno);
+    
+    //Initialising savings to zero
+    Acc.savings = 0;
+    
+    //Storing your account details onto the binary file
+    fwrite(&Acc, sizeof(struct Bank), 1, ptr);
+    fclose(ptr); //Closing the file after our work is done
+    
+    printf("Account created successfully...\n");
+}
+
+
+//Function to deposit money in the account
+void deposit() {
+    
+    struct Bank Acc;
+    float amount;
+    int AccountNo;
+    
+    FILE *ptr = fopen("AccountDetails.dat", "rb+"); 
+/*'rb+' mode helps us to do read and write both, works only if the file already exist it helps us to write from the beginning*/
+
+    if (!ptr) {
+        
+        printf("Sorry there are currently no accounts in the database!\n");
+        printf("Firstly make an account...\n");
+        return;        
+/*If we do not create any account and try to extract anything from it then it will show this*/
+    }
+    
+    printf("\nEnter account no: ");
+    scanf("%d", &AccountNo);
+    
+    while (fread(&Acc, sizeof(struct Bank), 1, ptr)) {
+        
+        if (Acc.accno == AccountNo) {  // verifying the accountno
+        
+            printf("\nYour current balance: %.2f", Acc.savings);
+            printf("\nEnter money you want to deposit: ");
+            
+            scanf("%f", &amount);
+            
+            Acc.savings += amount;//Adding money to account
+            
+            fseek(ptr, -sizeof(struct Bank), SEEK_CUR); //Sending the pointer to the beginning of the structure
+            
+            fwrite(&Acc, sizeof(struct Bank), 1, ptr); //Finally update it on the file
+            
+            printf("\nDeposited Successfully...");
+            printf("\nYour new balance: %.2f\n", Acc.savings);
+            
+            fclose(ptr);
+            return;
+        }
+    }
+    printf("\nAccount not found....\nTry again...\n");
+    fclose(ptr);
+}
+
+
+//Function to withdraw money from an account
+void withdraw() {
+    
+    struct Bank Acc;
+    float amount;
+    int AccountNo;
+    
+    printf("Enter the account no: ");
+    scanf("%d", &AccountNo);
+    
+    FILE *ptr = fopen("AccountDetails.dat", "rb+");
+    
+    if (!ptr) {
+        printf("Sorry there are currently no accounts in the database!\n");
+        printf("Firstly make an account...\n");
+        return;
+    }
+
+    while (fread(&Acc, sizeof(struct Bank), 1, ptr)) {
+        
+        if (Acc.accno == AccountNo) {//Verifying account no
+        
+            printf("\nYour current balance: %.2f", Acc.savings);
+            
+            printf("\nEnter money you want to withdraw: ");
+            
+            scanf("%f", &amount);
+            
+            if (Acc.savings >= amount) {
+                Acc.savings -= amount; //Withdrawing money from the account
+                
+                fseek(ptr, -sizeof(struct Bank), SEEK_CUR);
+                
+                fwrite(&Acc, sizeof(struct Bank), 1, ptr); //Finally updating it on the binary file
+                printf("\nWithdrawn Successfully...");
+                printf("\nYour new balance: %.2f\n", Acc.savings);
+                
+                fclose(ptr);
+                return;
+            }
+             else {
+                printf("\nInsufficient Balance...\n"); //If the money to be withdrawn is greater than the balance in the account then it will return 'Insufficient Balance'
+                
+                fclose(ptr);
+                return;
+            }
+        }
+    }
+    
+    printf("\nAccount not found....\nTry again...\n");
+    fclose(ptr);
+}
+
+
+//Function to check Balance in an account
+void check() {
+    
+    struct Bank Acc;
+    int AccountNo;
+    
+    printf("\nEnter your account no: ");
+    scanf("%d", &AccountNo);
+    
+    // I use 'rb' mode to just read the file
+    FILE *ptr = fopen("AccountDetails.dat", "rb");
+    
+    if (!ptr) {
+        printf("Sorry there are currently no accounts in the database!\n");
+        printf("Firstly make an account...\n");
+        return;
+    }
+
+    while (fread(&Acc, sizeof(struct Bank), 1, ptr)) {
+        
+        if (Acc.accno == AccountNo) { //Verifying
+        
+            printf("\nYour current balance: %.2f\n", Acc.savings); //Returning the current balance
+            
+            fclose(ptr);
+            return;
+        }
+    }
+    printf("\nAccount not found...\nTry again...\n");
+    fclose(ptr);
+}
+
+
+
+int main() {
+    
+    int choice; 
+    
+    //Making the interface for the user
+    
+    do {
+        printf("**Bank Management System**\n");
+        
+        //Giving 5 options
+        
+        printf("1. Create Account\n");
+        printf("2. Deposit Money\n");
+        printf("3. Withdraw Money\n");
+        printf("4. Check Balance\n");
+        printf("5. Exit\n");
+        printf("Enter your choice: ");
+        
+        //Taking 1 choice from the user at a time
+        scanf("%d", &choice);
+        
+        //Using switch to handle different cases depending upon the choice entered by the user
+        
+        switch (choice) {
+            
+            case 1:
+            //Calling create function
+                create(); break;
+                
+            case 2:
+            //Calling deposit function
+                deposit(); break;
+                
+            case 3:
+            //Calling withdraw function
+                withdraw(); break;
+                
+            case 4:
+            //Calling check function
+                check(); break;
+                
+            case 5:
+            //Exiting the interface
+                printf("Exited successfully... \nThank you!\n"); break;
+                
+            default:
+            //If the user enters any no greater than 5 or less than 1
+                printf("Invalid choice, enter again...\n");
+                
+        }
+        
+    } while (choice != 5);
+    
+    return 0;
+}
